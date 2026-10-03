@@ -1,0 +1,36 @@
+{
+  "name": "dsh-bg-switcher",
+  "version": "0.2.0",
+  "private": true,
+  "description": "DeepSeek Harness Web GUI 背景图快捷切换插件：图库 + 缩略图面板 + 随机轮播（可设间隔）+ 换图交叉淡入 + 鼠标视差 + 遮罩/模糊/沉浸模式，选择持久化在 profile 里。",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "background",
+    "wallpaper",
+    "theme"
+  ],
+  "type": "module",
+  "main": "lib/index.js",
+  "files": [
+    "lib",
+    "assets",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LHXB111/dsh-bg-switcher.git"
+  },
+  "homepage": "https://github.com/LHXB111/dsh-bg-switcher#readme",
+  "bugs": {
+    "url": "https://github.com/LHXB111/dsh-bg-switcher/issues"
+  }
+}
