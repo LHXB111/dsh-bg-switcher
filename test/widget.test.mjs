@@ -261,6 +261,24 @@ describe('面板与快捷键', () => {
     assert.equal(ctx.document.body.hasAttribute('data-dsh-bg-hiddenbtn'), true)
     assert.equal(ctx.serverSettings.hidden, true)
   })
+
+  it('沉浸模式可关闭与重新开启，保留壁纸选择并持久化', async () => {
+    const ctx = await boot()
+    const toggle = toggleByText(ctx, '沉浸模式')
+    const image = currentImage(ctx)
+    toggle.checked = false
+    toggle.dispatch('change')
+    await flush()
+    assert.equal(ctx.document.body.hasAttribute('data-dsh-bg-immersive'), false)
+    assert.equal(ctx.serverSettings.immersive, false)
+    assert.equal(currentImage(ctx), image)
+    toggle.checked = true
+    toggle.dispatch('change')
+    await flush()
+    assert.equal(ctx.document.body.hasAttribute('data-dsh-bg-immersive'), true)
+    assert.equal(ctx.serverSettings.immersive, true)
+    assert.equal(currentImage(ctx), image)
+  })
 })
 
 describe('亮暗分开 / 清除 / 删除', () => {

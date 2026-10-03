@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN" data-platform="win32" data-windows-titlebar>
+<meta charset="utf-8">
+<title>Windows 侧栏壁纸回归检查</title>
+<style>
+/* Reproduces the relevant AppFrame rules shipped with DSH Desktop 0.2.0-rc.2.
+   Both the Windows frame and sidebar consume --dsw-specific-sidebar-fill. */
+html,body,#root{height:100%;margin:0;font:15px system-ui}
+html{--dsh-windows-titlebar-height:36px}
+body{--dsw-alias-bg-base:#fff;--dsw-specific-sidebar-fill:#f9fafb;color:#16191f;isolation:isolate}
+body[data-ds-dark-theme]{--dsw-alias-bg-base:#151517;--dsw-specific-sidebar-fill:#1b1b1c;color:#ececf0}
+.fixture_frame{display:grid;grid-template-columns:250px 1fr;position:relative;height:100%;background:var(--dsw-alias-bg-base);box-sizing:border-box}
+[data-windows-titlebar] .fixture_frame{padding-top:var(--dsh-windows-titlebar-height);background:var(--dsw-specific-sidebar-fill)}
+[data-windows-titlebar] .fixture_frame::before{content:"";position:absolute;inset:0 0 auto;height:var(--dsh-windows-titlebar-height);background:var(--dsw-specific-sidebar-fill)}
+.fixture_sidebarCol{background:var(--dsw-specific-sidebar-fill);padding:24px}
+[data-windows-titlebar] .fixture_centerCol{background:var(--dsw-alias-bg-base);padding:36px;border-radius:16px 0 0}
+.fixture_sidebarCol p{margin:28px 0}
+nav{position:fixed;bottom:12px;right:12px;z-index:5;border-radius:12px;background:#fffffff0;color:#172032;padding:14px;max-width:430px;font-size:12px}
+nav a{display:inline-block;margin:3px;color:#3154a8}
+#result{white-space:pre-wrap;margin:8px 0 0}
+</style>
+<script>
+const params = new URLSearchParams(location.search)
+const dark = params.get('dark') === '1'
+const immersive = params.get('immersive') !== '0'
+const dim = Math.max(0, Math.min(1, Number(params.get('dim') ?? '.45')))
+const revision = params.get('revision') || 'current'
+const css = document.createElement('link')
+css.rel = 'stylesheet'
+css.href = '/plugin.css?revision=' + encodeURIComponent(revision)
+document.head.append(css)
+</script>
+<body data-dsh-bg>
+<div data-dsh-bg-stage><div data-dsh-bg-slide style="opacity:1;background-image:url('/assets/backgrounds/教室自习.jpg');background-size:cover;background-position:center"></div><div data-dsh-bg-slide></div></div>
+<div id="root"><div class="fixture_frame"><aside class="fixture_sidebarCol"><h2>DSH Desktop</h2><p>新会话</p><p>插件</p><p>工作区</p><p>侧栏应透出壁纸</p></aside><main class="fixture_centerCol"><h1>对话页面</h1><p>侧栏和对话区统一由遮罩控制可读性。</p></main></div></div>
+<nav>
+<strong>Windows 侧栏壁纸回归检查</strong><br>
+<a href="?dark=0&immersive=1">亮色 · 沉浸开启</a>
+<a href="?dark=1&immersive=1">暗色 · 沉浸开启</a>
+<a href="?dark=0&immersive=0">亮色 · 沉浸关闭</a>
+<a href="?dark=1&immersive=0">暗色 · 沉浸关闭</a>
+<a href="?dark=0&immersive=1&dim=0">遮罩 0%</a>
+<a href="?dark=1&immersive=1&dim=.8">遮罩 80%</a>
+<a href="?revision=baseline&dark=0&immersive=1">v0.2.0 对照</a>
+<pre id="result">正在检查计算样式…</pre>
+</nav>
+<script>
+document.body.toggleAttribute('data-ds-dark-theme', dark)
+document.body.toggleAttribute('data-dsh-bg-immersive', immersive)
+document.body.style.setProperty('--dsh-bg-scrim', dark ? `rgba(14,15,20,${dim})` : `rgba(252,252,253,${dim})`)
+function alpha(color) {
+  const rgba = /^rgba\([^,]+,[^,]+,[^,]+,\s*([\d.]+)\)$/.exec(color)
+  return rgba ? Number(rgba[1]) : 1
+}
+css.onload = () => {
+  const frame = document.querySelector('.fixture_frame')
+  const sidebar = document.querySelector('.fixture_sidebarCol')
+  const center = document.querySelector('.fixture_centerCol')
+  const values = {
+    frame: getComputedStyle(frame).backgroundColor,
+    titlebar: getComputedStyle(frame, '::before').backgroundColor,
+    sidebar: getComputedStyle(sidebar).backgroundColor,
+    center: getComputedStyle(center).backgroundColor,
+    scrim: getComputedStyle(document.getElementById('root')).backgroundColor
+  }
+  const layers = ['frame', 'titlebar', 'sidebar', 'center']
+  const checks = layers.map(name => ({name, pass: alpha(values[name]) === (immersive ? 0 : 1)}))
+  checks.push({name:'遮罩设置', pass: Math.abs(alpha(values.scrim) - dim) < .001})
+  const result = {dark, immersive, dim, revision, values, checks, passed: checks.every(x => x.pass)}
+  document.getElementById('result').textContent = (result.passed ? 'PASS：所有检查通过' : 'FAIL：底色仍遮住壁纸') + '\n' + checks.map(x => `${x.pass ? '✓' : '✕'} ${x.name}: ${values[x.name] || values.scrim}`).join('\n')
+  fetch('/result', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(result)}).catch(() => {})
+}
+</script>
+</body>
+</html>

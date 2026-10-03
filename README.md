@@ -183,6 +183,13 @@ id 形如 `builtin:教室自习.jpg` / `user:我的图.webp`，服务端只认"�
 
 ## 排障
 
+### Windows 只有对话区域能看到壁纸，侧栏看不到
+
+先确认面板里的「沉浸模式（让界面各层透出背景）」已经勾选。
+如果仍然看不到，请更新到 **v0.2.1 或更新版本**：Windows 的窗口外层与侧栏会叠加同一个背景底色，旧版即使开启沉浸模式也会把壁纸几乎完全盖住。新版让这些层透明，统一使用面板里的「遮罩」控制可读性。
+
+从 [最新发布页面](https://github.com/LHXB111/dsh-bg-switcher/releases/latest) 下载 Source code (zip)，解压后重新运行 `install.ps1`，再彻底退出并重开 DSH Desktop。重新安装会保留已有的图库和设置，无需先卸载。
+
 插件支持一份可选的运行痕迹（不设环境变量时完全是空操作）：
 
 ```bash
@@ -201,7 +208,8 @@ DSH_BG_TRACE=/tmp/bg.log <启动 dsh web 的命令>
 ## 测试
 
 ```bash
-node --test test/server.test.mjs test/widget.test.mjs   # 78 项：宿主半区 + 浏览器半区（含轮播/淡入/视差）
+node --test test/server.test.mjs test/widget.test.mjs   # 79 项：宿主半区 + 浏览器半区（含轮播/淡入/视差）
+node tools/verify-windows-shell.mjs                    # 浏览器回归：Windows 侧栏/窗口底色，含亮暗与沉浸开关
 bash tools/verify-sandbox.sh                            # 临时 DSH_HOME 起一次性 harness，8 项端到端
 bash tools/probe-render.sh                              # 官方 harness + headless Chrome 真渲染：12 项断言 + 截图
 bash tools/verify-official.sh                           # 官方桌面端：路由 + 页面自检 + 遮罩
